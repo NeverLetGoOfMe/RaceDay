@@ -72,11 +72,6 @@ Green build screenshot:
 
 ![CI/CD green build](./docs/ci-success-screenshot.png)
 
-## Video walkthroughs
-
-- Part 1: `<add unlisted YouTube link>`
-- Part 2: `<add unlisted YouTube link>`
-
 ## AI tool disclosure
 
-I used Claude (Anthropic) to help plan the database and API structure and to produce first drafts of the diagram, SQL script and code. I reviewed, ran and changed this work myself, and I explain the code structure and decisions in my videos.
+I used Claude (Anthropic) to help plan the database and API structure and to produce first drafts of the diagram, SQL script and code. I reviewed, ran and changed this work myself.
