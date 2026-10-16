@@ -25,12 +25,12 @@ Both roles can view and update their own profile. Role rules are enforced on the
 
 ## Part 2 - RaceDay API (`/Part2`)
 
-- `RaceDay.Api` - ASP.NET Core Web API, Entity Framework Core (Code-First), Swagger
-- `RaceDay.Tests` - xUnit tests
+- `RaceDay.Api` - ASP.NET Core Web API (Microsoft, 2026), Entity Framework Core (Microsoft, 2026), Swagger (OpenAPI Initiative, 2026)
+- `RaceDay.Tests` - xUnit tests (xUnit.net, 2026)
 
 ### Setup and run
 
-1. Install the .NET 10 SDK, Visual Studio and SQL Server (Express is fine). Make sure the SQL Server service is running.
+1. Install the .NET 10 SDK, Visual Studio and SQL Server (Microsoft, 2026) (Express is fine). Make sure the SQL Server service is running.
 2. Clone the repository.
 3. Open `Part2/RaceDay.Api/appsettings.json` and check the `DefaultConnection` string matches your SQL Server instance (the default is `localhost\SQLEXPRESS`).
 4. Create the database from the migrations. In Visual Studio open **Tools > NuGet Package Manager > Package Manager Console**, select `RaceDay.Api` as the default project, and run:
@@ -49,8 +49,8 @@ Both roles can view and update their own profile. Role rules are enforced on the
 
 ### Authentication design
 
-- Passwords are hashed with PBKDF2 (random salt, 100 000 iterations) before they are stored. The original password is never saved.
-- Logging in stores the user's ID and role in a server-side session. Protected endpoints use a `[SessionAuthorize]` attribute that reads the session: no session gives 401, the wrong role gives 403.
+- Passwords are hashed with PBKDF2 (random salt, 100 000 iterations) before they are stored (NIST, 2010). The original password is never saved.
+- Logging in stores the user's ID and role in a server-side session (OWASP, 2024). Protected endpoints use a `[SessionAuthorize]` attribute that reads the session: no session gives 401, the wrong role gives 403.
 - Organisers can only change their own events (and the categories, enrolments and results that belong to them), so one organiser cannot edit another organiser's event.
 - Registration lets a user choose Organiser or Participant, as the brief describes. In a real product, organiser accounts would need approval; I kept self-selection to match the brief.
 
@@ -63,7 +63,7 @@ Both roles can view and update their own profile. Role rules are enforced on the
 
 ## CI/CD
 
-Two GitHub Actions workflows run on every push:
+Two GitHub Actions workflows (GitHub, 2026) run on every push:
 
 - `validate-repo.yml` - checks the repository structure (`/docs` files, Part 2 projects and this README).
 - `build-and-test.yml` - builds the API and runs all unit tests.
@@ -75,3 +75,23 @@ Green build screenshot:
 ## AI tool disclosure
 
 I used Claude (Anthropic) to help plan the database and API structure and to produce first drafts of the diagram, SQL script and code. I reviewed, ran and changed this work myself.
+
+## References
+
+Fielding, R.T., 2000. *Architectural Styles and the Design of Network-based Software Architectures*. Doctoral dissertation. University of California, Irvine. Available at: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm [Accessed 16 October 2026].
+
+GitHub, 2026. *GitHub Actions documentation*. Available at: https://docs.github.com/en/actions [Accessed 16 October 2026].
+
+Microsoft, 2026a. *ASP.NET documentation*. Available at: https://learn.microsoft.com/en-us/aspnet/core/ [Accessed 16 October 2026].
+
+Microsoft, 2026b. *Overview of Entity Framework Core*. Available at: https://learn.microsoft.com/en-us/ef/core/ [Accessed 16 October 2026].
+
+Microsoft, 2026c. *SQL Server technical documentation*. Available at: https://learn.microsoft.com/en-us/sql/sql-server/ [Accessed 16 October 2026].
+
+NIST, 2010. *Recommendation for Password-Based Key Derivation Part 1: Storage Applications*. NIST Special Publication 800-132. Available at: https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-132.pdf [Accessed 16 October 2026].
+
+OpenAPI Initiative, 2026. *OpenAPI Specification*. Available at: https://swagger.io/specification/ [Accessed 16 October 2026].
+
+OWASP, 2024. *Session Management Cheat Sheet*. OWASP Cheat Sheet Series. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html [Accessed 16 October 2026].
+
+xUnit.net, 2026. *Getting Started with xUnit.net v3*. Available at: https://xunit.net/docs/getting-started/v3/getting-started [Accessed 16 October 2026].

@@ -1,7 +1,7 @@
 # RaceDay API Endpoint Plan
 
-This table lists every endpoint the RaceDay API exposes. It was first planned in Part 1 and revised for Part 2 (see "Changes since Part 1" at the bottom).
-Authentication uses server-side sessions: logging in stores the user's ID and role in the session, and protected endpoints check them.
+This table lists every endpoint the RaceDay API exposes. It was first planned in Part 1 and revised for Part 2 (see "Changes since Part 1" at the bottom). The API follows REST architectural principles (Fielding, 2000).
+Authentication uses server-side sessions (OWASP, 2024): logging in stores the user's ID and role in the session, and protected endpoints check them.
 
 | HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
 |---|---|---|---|---|---|
@@ -31,3 +31,9 @@ Authentication uses server-side sessions: logging in stores the user's ID and ro
 - **Sessions instead of JWT.** The Part 2 brief asks for session-based authentication, so login now stores the user ID and role in a server-side session instead of returning a token. I added `POST /api/auth/logout` because a session needs a way to end.
 - **Events now hold `distance` and `eventType`** (Run, Walk or Cycle), as the Part 2 brief requires. `distance` was removed from categories, which now describe groups such as "Under 20" or "Senior".
 - **Added `GET /api/results/me`** so participants can view their own results.
+
+## References
+
+Fielding, R.T., 2000. *Architectural Styles and the Design of Network-based Software Architectures*. Doctoral dissertation. University of California, Irvine. Available at: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm [Accessed 16 October 2026].
+
+OWASP, 2024. *Session Management Cheat Sheet*. OWASP Cheat Sheet Series. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html [Accessed 16 October 2026].
