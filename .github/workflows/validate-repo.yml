@@ -1,0 +1,36 @@
+name: Validate Repository Structure
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  validate-structure:
+    name: Check required files exist
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check /docs folder and Part 1 files
+        run: |
+          [ -d "docs" ] || { echo "ERROR: /docs folder is missing."; exit 1; }
+          ls docs/*ERD*      > /dev/null 2>&1 || { echo "ERROR: no ERD file in /docs."; exit 1; }
+          ls docs/*Endpoint* > /dev/null 2>&1 || { echo "ERROR: no endpoint plan in /docs."; exit 1; }
+          ls docs/*.sql      > /dev/null 2>&1 || { echo "ERROR: no .sql script in /docs."; exit 1; }
+          echo "Part 1 documents found."
+
+      - name: Check Part 2 projects
+        run: |
+          [ -d "Part2/RaceDay.Api" ]   || { echo "ERROR: Part2/RaceDay.Api is missing.";   exit 1; }
+          [ -d "Part2/RaceDay.Tests" ] || { echo "ERROR: Part2/RaceDay.Tests is missing."; exit 1; }
+          echo "Part 2 projects found."
+
+      - name: Check README exists
+        run: |
+          [ -f "README.md" ] || { echo "ERROR: README.md is missing."; exit 1; }
+          echo "README.md found."
