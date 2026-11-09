@@ -1,0 +1,36 @@
+# Starts the whole RaceDay system with one command:  docker compose up --build
+#   - db  : SQL Server
+#   - api : the Part 2 API (creates the database on first start)
+#   - web : the Part 3 MVC application
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD:-RaceDay_Passw0rd!}"
+    volumes:
+      - raceday-db:/var/opt/mssql
+
+  api:
+    build: ./Part2/RaceDay.Api
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=db;Database=RaceDayDb;User Id=sa;Password=${SA_PASSWORD:-RaceDay_Passw0rd!};TrustServerCertificate=True;"
+      Database__MigrateOnStartup: "true"
+      AzureStorage__ConnectionString: "${AZURE_STORAGE_CONNECTION_STRING:-}"
+      AzureStorage__ContainerName: "raceday-images"
+    ports:
+      - "8080:8080"
+
+  web:
+    build: ./Part3/RaceDay.Web
+    depends_on:
+      - api
+    environment:
+      Api__BaseUrl: "http://api:8080"
+    ports:
+      - "8081:8080"
+
+volumes:
+  raceday-db:
