@@ -30,6 +30,13 @@ jobs:
           [ -d "Part2/RaceDay.Tests" ] || { echo "ERROR: Part2/RaceDay.Tests is missing."; exit 1; }
           echo "Part 2 projects found."
 
+      - name: Check Part 3 project and Docker files
+        run: |
+          [ -d "Part3/RaceDay.Web" ] || { echo "ERROR: Part3/RaceDay.Web is missing."; exit 1; }
+          [ -f "Part3/RaceDay.Web/Dockerfile" ] || { echo "ERROR: Dockerfile is missing."; exit 1; }
+          [ -f "docker-compose.yml" ] || { echo "ERROR: docker-compose.yml is missing."; exit 1; }
+          echo "Part 3 files found."
+
       - name: Check README exists
         run: |
           [ -f "README.md" ] || { echo "ERROR: README.md is missing."; exit 1; }

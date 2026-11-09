@@ -27,5 +27,8 @@ jobs:
       - name: Build
         run: dotnet build Part2/RaceDay.Tests/RaceDay.Tests.csproj --configuration Release --no-restore
 
+      - name: Build MVC web application
+        run: dotnet build Part3/RaceDay.Web/RaceDay.Web.csproj --configuration Release
+
       - name: Run unit tests
         run: dotnet test Part2/RaceDay.Tests/RaceDay.Tests.csproj --configuration Release --no-build --verbosity normal
