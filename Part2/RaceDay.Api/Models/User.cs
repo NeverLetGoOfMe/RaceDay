@@ -22,5 +22,9 @@ public class User
     [MaxLength(20)]
     public string? ContactNumber { get; set; }
 
+    // Name of the profile picture blob in Azure Blob Storage
+    [MaxLength(100)]
+    public string? ProfilePicture { get; set; }
+
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 }

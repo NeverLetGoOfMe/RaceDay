@@ -25,6 +25,10 @@ public class Event
     [MaxLength(500)]
     public string? RouteInfo { get; set; }
 
+    // Name of the banner image blob in Azure Blob Storage
+    [MaxLength(100)]
+    public string? BannerImage { get; set; }
+
     [Column(TypeName = "decimal(6,2)")]
     public decimal Distance { get; set; }
 
