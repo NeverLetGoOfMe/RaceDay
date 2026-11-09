@@ -8,7 +8,7 @@ The project is built in three parts:
 |---|---|---|
 | 1 | System planning: ERD, endpoint plan, SQL script | `/docs` |
 | 2 | RESTful API in C# with unit tests and CI/CD | `/Part2` |
-| 3 | MVC web application, Azure Blob Storage and Docker | added later |
+| 3 | MVC web application, Azure Blob Storage and Docker | `/Part3` |
 
 ## User roles
 
@@ -60,6 +60,59 @@ Both roles can view and update their own profile. Role rules are enforced on the
 - `Distance` and `EventType` (Run, Walk, Cycle) moved onto Events, as the Part 2 brief requires, and `Distance` was removed from Categories. The ERD, SQL script and endpoint plan were updated to match.
 - Added `GET /api/results/me` so participants can view their own results.
 - The database is created by EF Core migrations (Code-First), so column types are EF's defaults (for example `nvarchar` instead of `varchar`). The tables, columns and relationships match the ERD. The SQL script in `/docs` is the Part 1 design and seed data.
+
+## Part 3 - RaceDay web application (`/Part3`)
+
+`RaceDay.Web` is an ASP.NET Core MVC application that gives Organisers and Participants a website for RaceDay. It never touches the database or Azure directly. Every action is a call to the Part 2 API, so all the business rules (roles, ownership checks, duplicate enrolments and so on) stay in one place.
+
+### What each role sees
+
+- **Organiser:** dashboard (events created, upcoming events, enrolments per event), event management (create, edit, delete, banner upload), category management, an enrolments page with status control, and a results page to capture finish times and positions.
+- **Participant:** upcoming events with filters (search, type, date), event details with categories, enrolment, My Enrolments (colour-coded status), My Results (for example "47th out of 312 finishers") and a profile page with picture upload.
+
+Each role has its own navigation menu. Pages are protected: someone who is not logged in is sent to the login page, and the wrong role is sent to an "access denied" page.
+
+### How login works across the two projects
+
+The API remembers a logged-in user with a session cookie. The MVC app calls the API from the server, so after a successful login it stores that API cookie in its own session and sends it with every later API call. The MVC session also holds the user's ID, name and role, which the menus and page checks use. Logging out clears both sessions.
+
+### Azure Blob Storage
+
+Image uploads (event banners and profile pictures) go from the website to the API, and the API stores them in a private Azure Blob Storage container. The website shows images by asking the API for them, so the browser and the MVC app never talk to Azure.
+
+1. In the Azure Portal, create a Storage account.
+2. Copy its connection string (Security + networking > Access keys).
+3. Running locally: from `Part2/RaceDay.Api` run
+   ```
+   dotnet user-secrets init
+   dotnet user-secrets set "AzureStorage:ConnectionString" "<your connection string>"
+   ```
+4. Running in Docker: copy `.env.example` to `.env` and paste the connection string into it. `.env` is git-ignored, so the key is never committed.
+
+### Run it locally (without Docker)
+
+1. Apply the database migrations: from `Part2/RaceDay.Api` run `dotnet ef database update`.
+2. Start the API: `dotnet run` in `Part2/RaceDay.Api` (it listens on http://localhost:5032, check `Api:BaseUrl` in `Part3/RaceDay.Web/appsettings.json` matches).
+3. In a second terminal, start the website: `dotnet run` in `Part3/RaceDay.Web` and open the address it prints.
+
+### Run it with Docker (one command)
+
+Install Docker Desktop, then from the repository root run:
+
+```
+docker compose up --build
+```
+
+This starts SQL Server, the API (which creates the database on first start) and the website. Open http://localhost:8081 for the website and http://localhost:8080/swagger for the API. The containerised website behaves the same as the local one. Stop everything with `docker compose down`.
+
+The `Dockerfile` in `Part3/RaceDay.Web` uses a multi-stage build: the .NET SDK image restores and publishes the app, and a smaller ASP.NET runtime image runs it as a non-root user.
+
+### Changes to the API for Part 3
+
+- Events store a `BannerImage` and users store a `ProfilePicture` (names of the blobs in Azure).
+- New endpoints: `GET /api/events/mine`, `POST /api/events/{id}/banner`, `POST /api/users/me/picture`, `GET /api/images/{name}`, `PUT /api/enrolments/{id}/status`. `GET /api/events` accepts `type`, `search` and `from` filters, and results now include the event date and the total number of finishers in the category.
+- Results are published as soon as an organiser captures them.
+- The full list is in `docs/RaceDay_Endpoint_Plan.md`.
 
 ## CI/CD
 

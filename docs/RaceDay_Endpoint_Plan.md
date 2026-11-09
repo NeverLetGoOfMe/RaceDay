@@ -1,7 +1,7 @@
 # RaceDay API Endpoint Plan
 
-This table lists every endpoint the RaceDay API exposes. It was first planned in Part 1 and revised for Part 2 (see "Changes since Part 1" at the bottom). The API follows REST architectural principles (Fielding, 2000).
-Authentication uses server-side sessions (OWASP, 2024): logging in stores the user's ID and role in the session, and protected endpoints check them.
+This table lists every endpoint the RaceDay API exposes. It was first planned in Part 1 and revised for Part 2 (see "Changes since Part 1" at the bottom).
+Authentication uses server-side sessions: logging in stores the user's ID and role in the session, and protected endpoints check them.
 
 | HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
 |---|---|---|---|---|---|
@@ -26,14 +26,21 @@ Authentication uses server-side sessions (OWASP, 2024): logging in stores the us
 | GET | /api/results/me | Lets a participant view their own results. | Participant | None | 200 OK – array of results |
 | GET | /api/categories/{categoryId}/results | Shows the results for a category, ordered by position. | None | None | 200 OK – array of results / 404 |
 
+## Added in Part 3
+
+| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
+|---|---|---|---|---|---|
+| GET | /api/events/mine | Lists the organiser's own events with the number of enrolments for each (dashboard). | Organiser | None | 200 OK – array of event summaries |
+| POST | /api/events/{eventId}/banner | Uploads an event banner image to Azure Blob Storage. | Organiser | multipart form: `file` (JPEG, PNG or WebP, up to 5 MB) | 200 OK – image name / 400 / 403 / 404 / 503 – storage unavailable |
+| POST | /api/users/me/picture | Uploads the logged-in user's profile picture to Azure Blob Storage. | Any | multipart form: `file` | 200 OK – image name / 400 / 503 |
+| GET | /api/images/{name} | Returns a stored image so the website can display it (the container stays private). | None | None | 200 OK – image / 404 Not Found |
+| PUT | /api/enrolments/{id}/status | Lets an organiser change an enrolment's status. | Organiser | `{ status }` (Pending, Confirmed or Cancelled) | 200 OK – enrolment / 403 / 404 |
+
+`GET /api/events` also accepts the optional query options `type`, `search` and `from`, and results now include `eventDate` and `totalFinishers`.
+
 ## Changes since Part 1
 
 - **Sessions instead of JWT.** The Part 2 brief asks for session-based authentication, so login now stores the user ID and role in a server-side session instead of returning a token. I added `POST /api/auth/logout` because a session needs a way to end.
 - **Events now hold `distance` and `eventType`** (Run, Walk or Cycle), as the Part 2 brief requires. `distance` was removed from categories, which now describe groups such as "Under 20" or "Senior".
 - **Added `GET /api/results/me`** so participants can view their own results.
-
-## References
-
-Fielding, R.T., 2000. *Architectural Styles and the Design of Network-based Software Architectures*. Doctoral dissertation. University of California, Irvine. Available at: https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm [Accessed 16 October 2026].
-
-OWASP, 2024. *Session Management Cheat Sheet*. OWASP Cheat Sheet Series. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html [Accessed 16 October 2026].
+- **Part 3:** events and users now store the name of an uploaded image (`BannerImage`, `ProfilePicture`). Results are published as soon as an organiser captures them.
