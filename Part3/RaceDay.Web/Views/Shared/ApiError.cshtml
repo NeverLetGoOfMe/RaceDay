@@ -1,0 +1,10 @@
+@model string
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+<div class="rd-hero">
+    <h1>Hmm, that did not work</h1>
+    <p>@Model</p>
+</div>
+<a class="btn btn-rd" href="javascript:history.back()">Go back</a>
+<a class="btn btn-outline-rd" asp-controller="Events" asp-action="Index">Home</a>
