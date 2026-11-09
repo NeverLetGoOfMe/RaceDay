@@ -17,9 +17,9 @@ public class ResultsController : ApiControllerBase
         _db = db;
     }
 
-    private static ResultResponseDto ToDto(Result r) =>
+    private static ResultResponseDto ToDto(Result r, int totalFinishers) =>
         new(r.ResultId, r.EnrolmentId, r.Enrolment!.Participant!.FullName, r.Enrolment.Category!.Event!.EventName,
-            r.Enrolment.Category.CategoryName, r.FinishTime, r.Position);
+            r.Enrolment.Category.Event.EventDate, r.Enrolment.Category.CategoryName, r.FinishTime, r.Position, totalFinishers);
 
     private IQueryable<Result> WithDetails() =>
         _db.Results
@@ -74,7 +74,8 @@ public class ResultsController : ApiControllerBase
         await _db.SaveChangesAsync();
 
         result.Enrolment = enrolment;
-        return Created($"/api/categories/{enrolment.CategoryId}/results", ToDto(result));
+        var total = await _db.Results.CountAsync(r => r.Enrolment!.CategoryId == enrolment.CategoryId);
+        return Created($"/api/categories/{enrolment.CategoryId}/results", ToDto(result, total));
     }
 
     /// <summary>Lists the logged-in participant's own results.</summary>
@@ -89,7 +90,16 @@ public class ResultsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         var list = await WithDetails().Where(r => r.Enrolment!.ParticipantId == userId).ToListAsync();
-        return Ok(list.Select(ToDto));
+
+        // How many people finished in each of the participant's categories (for "47th out of 312")
+        var categoryIds = list.Select(r => r.Enrolment!.CategoryId).Distinct().ToList();
+        var totals = await _db.Results
+            .Where(r => categoryIds.Contains(r.Enrolment!.CategoryId))
+            .GroupBy(r => r.Enrolment!.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
+
+        return Ok(list.Select(r => ToDto(r, totals.GetValueOrDefault(r.Enrolment!.CategoryId))));
     }
 
     /// <summary>Shows the results for a category, ordered by finishing position.</summary>
@@ -110,6 +120,6 @@ public class ResultsController : ApiControllerBase
             .OrderBy(r => r.Position)
             .ToListAsync();
 
-        return Ok(list.Select(ToDto));
+        return Ok(list.Select(r => ToDto(r, list.Count)));
     }
 }

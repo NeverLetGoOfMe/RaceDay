@@ -90,3 +90,9 @@ public class ResultDto
     [Range(1, 100000)]
     public int Position { get; set; }
 }
+
+public class StatusDto
+{
+    [Required, RegularExpression("^(Pending|Confirmed|Cancelled)$", ErrorMessage = "Status must be Pending, Confirmed or Cancelled.")]
+    public string Status { get; set; } = string.Empty;
+}

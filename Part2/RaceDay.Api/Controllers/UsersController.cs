@@ -32,7 +32,7 @@ public class UsersController : ApiControllerBase
             return NotFound(new { message = "User not found." });
         }
 
-        return Ok(new UserResponseDto(user.UserId, user.FullName, user.Email, user.ContactNumber, user.Role!.RoleName));
+        return Ok(new UserResponseDto(user.UserId, user.FullName, user.Email, user.ContactNumber, user.Role!.RoleName, user.ProfilePicture));
     }
 
     /// <summary>Updates the name and contact number of the logged-in user.</summary>
@@ -55,6 +55,6 @@ public class UsersController : ApiControllerBase
         user.ContactNumber = dto.ContactNumber;
         await _db.SaveChangesAsync();
 
-        return Ok(new UserResponseDto(user.UserId, user.FullName, user.Email, user.ContactNumber, user.Role!.RoleName));
+        return Ok(new UserResponseDto(user.UserId, user.FullName, user.Email, user.ContactNumber, user.Role!.RoleName, user.ProfilePicture));
     }
 }

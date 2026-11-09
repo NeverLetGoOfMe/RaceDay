@@ -117,4 +117,38 @@ public class EnrolmentsController : ApiControllerBase
 
         return Ok(list.Select(ToDto));
     }
+
+    /// <summary>Changes the status of an enrolment (Pending, Confirmed or Cancelled) on one of the organiser's events.</summary>
+    /// <response code="200">The updated enrolment.</response>
+    /// <response code="403">The enrolment belongs to another organiser's event.</response>
+    /// <response code="404">No enrolment with that id.</response>
+    [HttpPut("/api/enrolments/{id:int}/status")]
+    [SessionAuthorize(RoleNames.Organiser)]
+    [ProducesResponseType(typeof(EnrolmentResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateStatus(int id, StatusDto dto)
+    {
+        var enrolment = await _db.Enrolments
+            .Include(e => e.Participant)
+            .Include(e => e.Category!).ThenInclude(c => c.Event)
+            .FirstOrDefaultAsync(e => e.EnrolmentId == id);
+
+        if (enrolment == null)
+        {
+            return NotFound(new { message = "Enrolment not found." });
+        }
+
+        if (enrolment.Category!.Event!.OrganiserId != CurrentUserId)
+        {
+            return Forbidden("You can only change enrolments for your own events.");
+        }
+
+        enrolment.Status = dto.Status;
+        await _db.SaveChangesAsync();
+
+        return Ok(ToDto(enrolment));
+    }
 }

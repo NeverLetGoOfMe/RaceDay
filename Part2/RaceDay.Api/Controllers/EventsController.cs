@@ -19,16 +19,60 @@ public class EventsController : ApiControllerBase
     }
 
     private static EventResponseDto ToDto(Event e) =>
-        new(e.EventId, e.OrganiserId, e.EventName, e.EventDate, e.Location, e.Description, e.RouteInfo, e.Distance, e.EventType);
+        new(e.EventId, e.OrganiserId, e.EventName, e.EventDate, e.Location, e.Description, e.RouteInfo, e.Distance, e.EventType, e.BannerImage);
 
-    /// <summary>Lists all events, soonest first.</summary>
+    /// <summary>Lists events, soonest first. Optionally filter by type, search text or start date.</summary>
+    /// <remarks>Query options: type (Run, Walk or Cycle), search (matches name or location) and from (only events on or after this date).</remarks>
     /// <response code="200">An array of events.</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<EventResponseDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? type = null, [FromQuery] string? search = null, [FromQuery] DateTime? from = null)
     {
-        var events = await _db.Events.OrderBy(e => e.EventDate).ToListAsync();
+        var query = _db.Events.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            query = query.Where(e => e.EventType == type);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(e => e.EventName.Contains(search) || e.Location.Contains(search));
+        }
+
+        if (from.HasValue)
+        {
+            var fromDate = from.Value.Date;
+            query = query.Where(e => e.EventDate >= fromDate);
+        }
+
+        var events = await query.OrderBy(e => e.EventDate).ToListAsync();
         return Ok(events.Select(ToDto));
+    }
+
+    /// <summary>Lists the logged-in organiser's own events with the number of enrolments for each.</summary>
+    /// <response code="200">An array of event summaries.</response>
+    /// <response code="403">Only organisers have events of their own.</response>
+    [HttpGet("mine")]
+    [SessionAuthorize(RoleNames.Organiser)]
+    [ProducesResponseType(typeof(IEnumerable<OrganiserEventSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMine()
+    {
+        var userId = CurrentUserId;
+        var events = await _db.Events.Where(e => e.OrganiserId == userId).OrderBy(e => e.EventDate).ToListAsync();
+        var ids = events.Select(e => e.EventId).ToList();
+
+        var counts = await _db.Enrolments
+            .Where(en => ids.Contains(en.Category!.EventId))
+            .GroupBy(en => en.Category!.EventId)
+            .Select(g => new { EventId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.EventId, x => x.Count);
+
+        return Ok(events.Select(e => new OrganiserEventSummaryDto(
+            e.EventId, e.EventName, e.EventDate, e.Location, e.EventType, e.Distance, e.BannerImage,
+            counts.GetValueOrDefault(e.EventId))));
     }
 
     /// <summary>Returns the details of one event.</summary>
