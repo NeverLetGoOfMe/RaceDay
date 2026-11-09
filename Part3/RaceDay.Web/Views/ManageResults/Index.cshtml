@@ -1,0 +1,78 @@
+@model ResultsPageVm
+@{
+    ViewData["Title"] = "Results";
+    var pending = Model.Enrolments.Where(e => !Model.ResultsByEnrolment.ContainsKey(e.EnrolmentId) && e.Status != "Cancelled").ToList();
+}
+<div class="mb-3"><a asp-controller="ManageEvents" asp-action="Index" class="text-decoration-none">&larr; My events</a></div>
+<div class="rd-hero"><h1>Results</h1><p>@Model.Event.EventName &middot; @Model.Event.EventDate.ToString("d MMM yyyy")</p></div>
+
+@if (Model.Event.EventDate.Date > DateTime.Today)
+{
+    <div class="alert alert-warning">This event has not taken place yet. Results are normally captured after it ends.</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card rd-card"><div class="card-body">
+            <h4>Captured results</h4>
+            @if (!Model.ResultsByEnrolment.Any())
+            {
+                <p class="text-muted mb-0">No results captured yet.</p>
+            }
+            else
+            {
+                <table class="table mb-0">
+                    <thead><tr><th>Position</th><th>Participant</th><th>Category</th><th>Time</th></tr></thead>
+                    <tbody>
+                    @foreach (var r in Model.ResultsByEnrolment.Values.OrderBy(x => x.CategoryName).ThenBy(x => x.Position))
+                    {
+                        <tr>
+                            <td><strong>@Format.Ordinal(r.Position)</strong></td>
+                            <td>@r.ParticipantName</td>
+                            <td>@r.CategoryName</td>
+                            <td>@Format.Time(r.FinishTime)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div></div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card rd-card"><div class="card-body">
+            <h4>Capture a result</h4>
+            @if (!pending.Any())
+            {
+                <p class="text-muted mb-0">Every enrolled participant already has a result.</p>
+            }
+            else
+            {
+                <form asp-action="Capture" method="post">
+                    <input type="hidden" asp-for="Form.EventId" />
+                    <div class="mb-3">
+                        <label asp-for="Form.EnrolmentId" class="form-label">Participant</label>
+                        <select asp-for="Form.EnrolmentId" class="form-select">
+                            <option value="0">Choose a participant...</option>
+                            @foreach (var e in pending)
+                            {
+                                <option value="@e.EnrolmentId">@e.ParticipantName (@e.CategoryName)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.EnrolmentId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.FinishTime" class="form-label"></label>
+                        <input asp-for="Form.FinishTime" type="text" class="form-control" placeholder="hh:mm:ss" />
+                        <span asp-validation-for="Form.FinishTime" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.Position" class="form-label"></label>
+                        <input asp-for="Form.Position" type="number" class="form-control" />
+                        <span asp-validation-for="Form.Position" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-rd">Capture &amp; publish</button>
+                </form>
+            }
+        </div></div>
+    </div>
+</div>

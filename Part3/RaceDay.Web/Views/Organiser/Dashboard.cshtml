@@ -1,0 +1,41 @@
+@model List<ApiEventSummary>
+@{
+    ViewData["Title"] = "Dashboard";
+    var upcoming = Model.Where(e => e.EventDate.Date >= DateTime.Today).OrderBy(e => e.EventDate).ToList();
+}
+<div class="rd-hero">
+    <h1>Organiser dashboard</h1>
+    <p>Your events at a glance.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="rd-stat"><div class="rd-stat-number">@Model.Count</div>Events created</div></div>
+    <div class="col-md-4"><div class="rd-stat"><div class="rd-stat-number">@upcoming.Count</div>Upcoming events</div></div>
+    <div class="col-md-4"><div class="rd-stat"><div class="rd-stat-number">@Model.Sum(e => e.EnrolmentCount)</div>Total enrolments</div></div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">You have not created any events yet. <a asp-controller="ManageEvents" asp-action="Create">Create your first event</a>.</div>
+}
+else
+{
+    <h3 class="mb-3">Enrolments per event</h3>
+    <div class="table-responsive card rd-card mb-4">
+        <table class="table table-hover mb-0 rd-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Type</th><th>Enrolments</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var e in Model.OrderBy(x => x.EventDate))
+            {
+                <tr>
+                    <td>@e.EventName</td>
+                    <td>@e.EventDate.ToString("d MMM yyyy") @(e.EventDate.Date < DateTime.Today ? "(past)" : "")</td>
+                    <td><span class="badge rd-badge-type">@e.EventType</span></td>
+                    <td><strong>@e.EnrolmentCount</strong></td>
+                    <td class="text-end"><a asp-controller="ManageEnrolments" asp-action="Index" asp-route-eventId="@e.EventId" class="btn btn-sm btn-outline-rd">View enrolments</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

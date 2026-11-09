@@ -1,0 +1,42 @@
+@model EventEnrolmentsVm
+@{
+    ViewData["Title"] = "Enrolments";
+}
+<div class="mb-3"><a asp-controller="ManageEvents" asp-action="Index" class="text-decoration-none">&larr; My events</a></div>
+<div class="rd-hero"><h1>Enrolments</h1><p>@Model.Event.EventName &middot; @Model.Enrolments.Count participant(s)</p></div>
+
+@if (!Model.Enrolments.Any())
+{
+    <div class="alert alert-info">Nobody has enrolled for this event yet.</div>
+}
+else
+{
+    <div class="table-responsive card rd-card">
+        <table class="table table-hover mb-0 rd-table">
+            <thead><tr><th>Participant</th><th>Category</th><th>Enrolled on</th><th>Status</th><th>Change status</th></tr></thead>
+            <tbody>
+            @foreach (var e in Model.Enrolments)
+            {
+                <tr>
+                    <td>@e.ParticipantName</td>
+                    <td>@e.CategoryName</td>
+                    <td>@e.EnrolmentDate.ToString("d MMM yyyy")</td>
+                    <td>@await Html.PartialAsync("_StatusBadge", e.Status)</td>
+                    <td>
+                        <form asp-action="SetStatus" method="post" class="d-flex gap-2">
+                            <input type="hidden" name="enrolmentId" value="@e.EnrolmentId" />
+                            <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                            <select name="status" class="form-select form-select-sm" style="max-width:150px;">
+                                <option value="Pending" selected="@(e.Status == "Pending")">Pending</option>
+                                <option value="Confirmed" selected="@(e.Status == "Confirmed")">Confirmed</option>
+                                <option value="Cancelled" selected="@(e.Status == "Cancelled")">Cancelled</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-rd">Update</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
