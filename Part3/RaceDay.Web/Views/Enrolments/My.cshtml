@@ -1,0 +1,33 @@
+@model List<ApiEnrolment>
+@{
+    ViewData["Title"] = "My enrolments";
+}
+<div class="rd-hero">
+    <h1>My enrolments</h1>
+    <p>Every event you have entered and where it stands.</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">You have not entered any events yet. <a asp-controller="Events" asp-action="Index">Browse upcoming events</a>.</div>
+}
+else
+{
+    <div class="table-responsive card rd-card">
+        <table class="table table-hover mb-0 rd-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Enrolled on</th><th>Status</th></tr></thead>
+            <tbody>
+            @foreach (var e in Model.OrderBy(x => x.EventDate))
+            {
+                <tr>
+                    <td><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.EventName</a></td>
+                    <td>@e.EventDate.ToString("d MMM yyyy")</td>
+                    <td>@e.CategoryName</td>
+                    <td>@e.EnrolmentDate.ToString("d MMM yyyy")</td>
+                    <td>@await Html.PartialAsync("_StatusBadge", e.Status)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

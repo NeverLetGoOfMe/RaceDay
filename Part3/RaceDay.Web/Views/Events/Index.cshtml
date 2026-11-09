@@ -1,0 +1,58 @@
+@model EventsIndexVm
+@{
+    ViewData["Title"] = "Upcoming events";
+}
+<div class="rd-hero">
+    <h1>Upcoming events</h1>
+    <p>Find your next run, walk or ride.</p>
+</div>
+
+<form method="get" class="card rd-card mb-4"><div class="card-body">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="search">Search</label>
+            <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Event name or place" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="type">Event type</label>
+            <select id="type" name="type" class="form-select">
+                <option value="" selected="@(string.IsNullOrEmpty(Model.Type))">All types</option>
+                <option value="Run" selected="@(Model.Type == "Run")">Run</option>
+                <option value="Walk" selected="@(Model.Type == "Walk")">Walk</option>
+                <option value="Cycle" selected="@(Model.Type == "Cycle")">Cycle</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="from">From date</label>
+            <input id="from" name="from" type="date" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-rd">Filter</button>
+        </div>
+    </div>
+</div></form>
+
+@if (!Model.Events.Any())
+{
+    <div class="alert alert-info">No events match those filters. Try widening your search.</div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var e in Model.Events)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card rd-card">
+                    @await Html.PartialAsync("_Banner", e.BannerImage)
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-2"><span class="badge rd-badge-type">@e.EventType</span> <span class="badge text-bg-light">@e.Distance.ToString("0.##") km</span></div>
+                        <h4 class="card-title">@e.EventName</h4>
+                        <p class="mb-1"><strong>@e.EventDate.ToString("dddd, d MMMM yyyy")</strong></p>
+                        <p class="text-muted">@e.Location</p>
+                        <a asp-action="Details" asp-route-id="@e.EventId" class="btn btn-rd mt-auto">View &amp; enter</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

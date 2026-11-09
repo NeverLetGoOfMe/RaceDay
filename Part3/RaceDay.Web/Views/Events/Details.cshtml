@@ -1,0 +1,66 @@
+@model EventDetailsVm
+@{
+    ViewData["Title"] = Model.Event.EventName;
+    var isParticipant = Context.Session.Role() == "Participant";
+}
+<div class="mb-3"><a asp-action="Index" class="text-decoration-none">&larr; All events</a></div>
+
+@if (!string.IsNullOrEmpty(Model.Event.BannerImage))
+{
+    <img class="rd-banner-large mb-4" src="@Url.Action("Get", "Images", new { id = Model.Event.BannerImage })" alt="Banner for @Model.Event.EventName" />
+}
+
+<div class="rd-hero">
+    <div class="mb-2"><span class="badge rd-badge-type">@Model.Event.EventType</span> <span class="badge text-bg-light">@Model.Event.Distance.ToString("0.##") km</span></div>
+    <h1>@Model.Event.EventName</h1>
+    <p>@Model.Event.EventDate.ToString("dddd, d MMMM yyyy") &middot; @Model.Event.Location</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card rd-card"><div class="card-body">
+            <h4>About this event</h4>
+            <p>@(string.IsNullOrWhiteSpace(Model.Event.Description) ? "No description has been added yet." : Model.Event.Description)</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Event.RouteInfo))
+            {
+                <h5>Route</h5>
+                <p class="mb-0">@Model.Event.RouteInfo</p>
+            }
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card rd-card"><div class="card-body">
+            <h4>Categories</h4>
+            @if (!Model.Categories.Any())
+            {
+                <p class="text-muted mb-0">The organiser has not added categories yet, so enrolments are not open.</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var c in Model.Categories)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>@c.CategoryName</strong><br />
+                                <small class="text-muted">@Format.Money(c.EntryFee) &middot; up to @c.MaxParticipants places</small>
+                            </div>
+                            @if (isParticipant)
+                            {
+                                <form asp-action="Enrol" method="post">
+                                    <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                                    <input type="hidden" name="categoryId" value="@c.CategoryId" />
+                                    <button type="submit" class="btn btn-sm btn-rd">Enrol</button>
+                                </form>
+                            }
+                        </li>
+                    }
+                </ul>
+                @if (!isParticipant)
+                {
+                    <p class="text-muted mt-3 mb-0">Log in as a participant to enter this event.</p>
+                }
+            }
+        </div></div>
+    </div>
+</div>

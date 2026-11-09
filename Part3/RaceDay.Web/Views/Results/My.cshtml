@@ -1,0 +1,33 @@
+@model List<ApiRaceResult>
+@{
+    ViewData["Title"] = "My results";
+}
+<div class="rd-hero">
+    <h1>My results</h1>
+    <p>Your race history across completed events.</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No results yet. They appear here once an organiser captures them after your event.</div>
+}
+else
+{
+    <div class="table-responsive card rd-card">
+        <table class="table table-hover mb-0 rd-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Finish time</th><th>Position</th></tr></thead>
+            <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.EventName</td>
+                    <td>@r.EventDate.ToString("d MMM yyyy")</td>
+                    <td>@r.CategoryName</td>
+                    <td><strong>@Format.Time(r.FinishTime)</strong></td>
+                    <td>@Format.Ordinal(r.Position) out of @r.TotalFinishers finishers</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
