@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using RaceDay.Api.Data;
+using RaceDay.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+
 // Session management - keeps the logged-in user's id and role on the server
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -37,6 +40,24 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+// Used by Docker: create/update the database when the container starts (retries while SQL Server boots)
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    for (var attempt = 1; attempt <= 12; attempt++)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            scope.ServiceProvider.GetRequiredService<RaceDayDbContext>().Database.Migrate();
+            break;
+        }
+        catch (Exception) when (attempt < 12)
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+        }
+    }
+}
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
